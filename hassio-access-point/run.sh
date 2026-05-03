@@ -204,12 +204,36 @@ else
 	logger "# DHCP not enabled. Skipping dnsmasq" 1
 fi
 
+# Netzwerkadresse aus ADDRESS + NETMASK berechnen
+IFS=. read -r a1 a2 a3 a4 <<< "$ADDRESS"
+IFS=. read -r m1 m2 m3 m4 <<< "$NETMASK"
+NETWORK="$((a1 & m1)).$((a2 & m2)).$((a3 & m3)).$((a4 & m4))"
+
+# Netmask in CIDR umrechnen
+netmask_to_cidr() {
+    local bits=0
+    IFS=. read -r a b c d <<< "$1"
+    for oct in $a $b $c $d; do
+        while [ $oct -gt 0 ]; do
+            bits=$((bits + (oct & 1)))
+            oct=$((oct >> 1))
+        done
+    done
+    echo $bits
+}
+CIDR=$(netmask_to_cidr $NETMASK)
+NETWORK_CIDR="$NETWORK/$CIDR"
+
 is_masquerading_enabled() {
     iptables-nft -t nat -C POSTROUTING -o $DEFAULT_ROUTE_INTERFACE -j MASQUERADE -m comment --comment "ap-addon-inet" 2>/dev/null
 }
 
 is_forwarding_enabled() {
     iptables-nft -C FORWARD -i $INTERFACE -o $DEFAULT_ROUTE_INTERFACE -j ACCEPT -m comment --comment "ap-addon-inet" 2>/dev/null
+}
+
+is_inbound_forwarding_enabled() {
+    iptables-nft -C FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -d $NETWORK_CIDR -j ACCEPT -m comment --comment "ap-addon-inet" 2>/dev/null
 }
 
 # Setup Client Internet Access
@@ -224,6 +248,11 @@ if $(bashio::config.true "client_internet_access"); then
         iptables-nft -A FORWARD -i $INTERFACE -o $DEFAULT_ROUTE_INTERFACE -j ACCEPT -m comment --comment "ap-addon-inet"
         iptables-nft -A FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT -m comment --comment "ap-addon-inet"
     fi
+
+    ## Eingehende neue Verbindungen von außen ins WLAN-Netz erlauben
+    if ! is_inbound_forwarding_enabled; then
+        iptables-nft -A FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -d $NETWORK_CIDR -j ACCEPT -m comment --comment "ap-addon-inet"
+    fi
 else
     ## Remove masquerade if present
     if is_masquerading_enabled; then
@@ -234,6 +263,11 @@ else
     if is_forwarding_enabled; then
         iptables-nft -D FORWARD -i $INTERFACE -o $DEFAULT_ROUTE_INTERFACE -j ACCEPT -m comment --comment "ap-addon-inet"
         iptables-nft -D FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT -m comment --comment "ap-addon-inet"
+    fi
+
+    ## Eingehende Regel wieder entfernen
+    if is_inbound_forwarding_enabled; then
+        iptables-nft -D FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -d $NETWORK_CIDR -j ACCEPT -m comment --comment "ap-addon-inet"
     fi
 fi
 

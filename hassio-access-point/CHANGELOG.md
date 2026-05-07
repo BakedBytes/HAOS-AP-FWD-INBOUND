@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.0] - 2026-05-04
+
+### Changed
+- **Migration to Docker BuildKit**: Updated build process to use native `docker build` and removed deprecated `build.yaml`. The `Dockerfile` is now the single source of truth (replacing per-arch base image definitions with `FROM ghcr.io/home-assistant/base:3.23`).
+- **Renaming**: Changed `slug` and `name` to `haos-access-point-bb` and "HAOS Access Point BB" respectively to distinguish this personal fork from the original project.
+- **Base Image**: Update Image to multi-platform `ghcr.io/home-assistant/base:3.23` for simplified architecture support.
+
+### Added
+- **Inbound Routing Fix**: Added `iptables` rule to allow incoming connections from LAN to WLAN clients (previously only outbound traffic was allowed). Network CIDR is calculated dynamically from config.
+
+### Fixed
+- Removed obsolete `build.yaml` and updated Dockerfile structure according to Home Assistant's 2026 builder migration guidelines.
+
+---
+
 ## [0.5.4] - 2025-11-03
 
 ### Added

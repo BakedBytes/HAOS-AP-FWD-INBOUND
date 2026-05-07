@@ -2,7 +2,7 @@
 
 # SIGTERM-handler this funciton will be executed when the container receives the SIGTERM signal (when stopping)
 term_handler(){
-	logger "Stopping Hass.io Access Point" 0
+	logger "Stopping HAOS Access Point Addon by BB" 0
 	ifdown $INTERFACE
 	ip link set $INTERFACE down
 	ip addr flush dev $INTERFACE
@@ -56,7 +56,7 @@ DNSMASQ_CONFIG_OVERRIDE=$(bashio::config 'dnsmasq_config_override' )
 # Get the Default Route interface
 DEFAULT_ROUTE_INTERFACE=$(ip route show default | awk '/^default/ { print $5 }')
 
-echo "Starting Hass.io Access Point Addon"
+echo "Starting HAOS Access Point Addon by BB"
 
 # Setup interface
 logger "# Setup interface:" 1

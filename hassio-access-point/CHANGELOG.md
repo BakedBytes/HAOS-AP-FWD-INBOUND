@@ -2,14 +2,15 @@
 
 ## [0.6.1] - 2026-05-08
 
+Pull-Request: [#2](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/2)
+
 ### Added 
-- PR: (#2)[https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/2]
 - **Inbound Access Toggle**: Added new `client_inbound_access` config option to allow devices from the main network to initiate connections into the AP subnet, independently of `client_internet_access`.
 - **DHCP Logging**: dnsmasq now logs DHCP lease events (DISCOVER, OFFER, REQUEST, ACK, NAK) to the addon log.
 
 ## [0.6.0] - 2026-05-04
 
-PR: (#1)[https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/1]
+Pull-Request: [#1](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/1)
 
 ### Changed
 - **Migration to Docker BuildKit**: Updated build process to use native `docker build` and removed deprecated `build.yaml`. The `Dockerfile` is now the single source of truth (replacing per-arch base image definitions with `FROM ghcr.io/home-assistant/base:3.23`).

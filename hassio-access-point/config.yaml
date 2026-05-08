@@ -1,6 +1,6 @@
 ---
 name: HAOS Access Point BB
-version: 0.6.0
+version: 0.6.1
 slug: haos-access-point-bb
 description: Create a WiFi access point to directly connect devices to Home Assistant
 arch: [armhf, armv7, aarch64, amd64, i386]
@@ -30,6 +30,7 @@ options:
   debug: 0
   hostapd_config_override: []
   client_internet_access: false
+  client_inbound_access: false
   client_dns_override: []
   dnsmasq_config_override: []
 schema:
@@ -53,6 +54,7 @@ schema:
   hostapd_config_override:
     - str?
   client_internet_access: bool
+  client_inbound_access: bool
   client_dns_override:
     - match(^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$)
   dnsmasq_config_override:

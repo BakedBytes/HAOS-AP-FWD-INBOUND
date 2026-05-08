@@ -66,10 +66,14 @@
 		},
 		"client_internet_access": {
 			"name": "Enable Internet Access",
-			"description": "Whether to allow internet access for clients"
+			"description": "Whether to allow clients to access the internet via Home Assistant's network interface. Enables outbound forwarding and masquerading."
+		},
+		"client_inbound_access": {
+			"name": "Enable Inbound Access",
+			"description": "Whether to allow devices from the main network to initiate connections into the AP subnet. Can be enabled independently of internet access."
 		},
 		"client_dns_override": {
-			"name": "Client DNS ",
+			"name": "Client DNS",
 			"description": "A list of DNS server IPs to use. If empty, will use Homeassistant's default DNS servers."
 		},
 		"dnsmasq_config_override": {

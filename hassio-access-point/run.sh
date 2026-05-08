@@ -21,7 +21,7 @@ logger(){
 CONFIG_PATH=/data/options.json
 
 # Convert integer configs to boolean, to avoid a breaking old configs
-declare -r bool_configs=( hide_ssid client_internet_access dhcp )
+declare -r bool_configs=( hide_ssid client_internet_access client_inbound_access dhcp )
 for i in $bool_configs ; do
     if bashio::config.true $i || bashio::config.false $i ; then
         continue
@@ -50,6 +50,7 @@ DEBUG=$(bashio::config 'debug' )
 HT_CAPAB=$(bashio::config 'ht_capab' '[HT40][SHORT-GI-20][DSSS_CCK-40]')
 HOSTAPD_CONFIG_OVERRIDE=$(bashio::config 'hostapd_config_override' )
 CLIENT_INTERNET_ACCESS=$(bashio::config.false 'client_internet_access'; echo $?)
+CLIENT_INBOUND_ACCESS=$(bashio::config.false 'client_inbound_access'; echo $?)
 CLIENT_DNS_OVERRIDE=$(bashio::config 'client_dns_override' )
 DNSMASQ_CONFIG_OVERRIDE=$(bashio::config 'dnsmasq_config_override' )
 
@@ -248,11 +249,6 @@ if $(bashio::config.true "client_internet_access"); then
         iptables-nft -A FORWARD -i $INTERFACE -o $DEFAULT_ROUTE_INTERFACE -j ACCEPT -m comment --comment "ap-addon-inet"
         iptables-nft -A FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT -m comment --comment "ap-addon-inet"
     fi
-
-    ## Eingehende neue Verbindungen von außen ins WLAN-Netz erlauben
-    if ! is_inbound_forwarding_enabled; then
-        iptables-nft -A FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -d $NETWORK_CIDR -j ACCEPT -m comment --comment "ap-addon-inet"
-    fi
 else
     ## Remove masquerade if present
     if is_masquerading_enabled; then
@@ -264,7 +260,15 @@ else
         iptables-nft -D FORWARD -i $INTERFACE -o $DEFAULT_ROUTE_INTERFACE -j ACCEPT -m comment --comment "ap-addon-inet"
         iptables-nft -D FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT -m comment --comment "ap-addon-inet"
     fi
+fi
 
+# Setup Inbound Access (unabhängig von client_internet_access)
+if $(bashio::config.true "client_inbound_access"); then
+    ## Eingehende neue Verbindungen von außen ins WLAN-Netz erlauben
+    if ! is_inbound_forwarding_enabled; then
+        iptables-nft -A FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -d $NETWORK_CIDR -j ACCEPT -m comment --comment "ap-addon-inet"
+    fi
+else
     ## Eingehende Regel wieder entfernen
     if is_inbound_forwarding_enabled; then
         iptables-nft -D FORWARD -i $DEFAULT_ROUTE_INTERFACE -o $INTERFACE -d $NETWORK_CIDR -j ACCEPT -m comment --comment "ap-addon-inet"
@@ -274,7 +278,7 @@ fi
 # Start dnsmasq if DHCP is enabled in config
 if $(bashio::config.true "dhcp"); then
     logger "## Starting dnsmasq daemon" 1
-    dnsmasq -C /dnsmasq.conf
+    dnsmasq -C /dnsmasq.conf --log-facility=- --log-dhcp 2>&1 | grep -E "DHCPDISCOVER|DHCPOFFER|DHCPREQUEST|DHCPACK|DHCPNAK" &
 fi
 
 logger "## Starting hostapd daemon" 1

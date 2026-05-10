@@ -52,10 +52,6 @@
 			"name": "MAC Address Blocklist",
 			"description": "A list of the MAC addresses that are NOT allowed to connect to the network. Any other devices will be allowed."
 		},
-		"debug": {
-			"name": "",
-			"description": ""
-		},
 		"ht_capab": {
 			"name": "HT Capabilities",
 			"description": "HT capabilities (list of flags)"
@@ -79,6 +75,10 @@
 		"dnsmasq_config_override": {
 			"name": "DNSMASQ Custom Configuration",
 			"description": "A list of options to append to the `dnsmasq.conf` file. Don't touch if you don't know what you're doing."
+		},
+		"static_dhcp_hosts": {
+			"name": "Static DHCP Hosts",
+			"description": "Assign fixed IP addresses to specific devices by MAC address.\n\n• mac: Device MAC address (e.g. a0:b7:65:4e:82:b4)\n• ip: Fixed IP to assign (e.g. 192.168.99.50)\n• hostname: Friendly name (e.g. Dachrinne)"
 		}
 	}
 }

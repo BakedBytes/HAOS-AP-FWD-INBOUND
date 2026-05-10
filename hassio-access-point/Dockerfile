@@ -12,6 +12,7 @@ RUN apk update && \
         networkmanager-cli \
         net-tools \
         sudo \
+        jq \
         dnsmasq \
         iptables && \
     rm -rf /var/cache/apk/*

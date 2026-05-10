@@ -168,29 +168,51 @@ if $(bashio::config.true "dhcp"); then
 
     ## DNS
     dns_array=()
-        if [ ${#CLIENT_DNS_OVERRIDE} -ge 1 ]; then
+    if [ ${#CLIENT_DNS_OVERRIDE} -ge 1 ]; then
+        dns_string="dhcp-option=6"
+        DNS_OVERRIDES=($CLIENT_DNS_OVERRIDE)
+        for override in "${DNS_OVERRIDES[@]}"; do
+            dns_string+=",$override"
+        done
+        echo "$dns_string"$'\n' >> /dnsmasq.conf
+        logger "Add custom DNS: $dns_string" 0
+    else
+        IFS=$'\n' read -r -d '' -a dns_array < <( nmcli device show | grep IP4.DNS | awk '{print $2}' && printf '\0' )
+
+        if [ ${#dns_array[@]} -eq 0 ]; then
+            logger "Couldn't get DNS servers from host. Consider setting with 'client_dns_override' config option." 0
+        else
             dns_string="dhcp-option=6"
-            DNS_OVERRIDES=($CLIENT_DNS_OVERRIDE)
-            for override in "${DNS_OVERRIDES[@]}"; do
-                dns_string+=",$override"
+            for dns_entry in "${dns_array[@]}"; do
+                dns_string+=",$dns_entry"
             done
             echo "$dns_string"$'\n' >> /dnsmasq.conf
-            logger "Add custom DNS: $dns_string" 0
-        else
-            IFS=$'\n' read -r -d '' -a dns_array < <( nmcli device show | grep IP4.DNS | awk '{print $2}' && printf '\0' )
-
-            if [ ${#dns_array[@]} -eq 0 ]; then
-                logger "Couldn't get DNS servers from host. Consider setting with 'client_dns_override' config option." 0
-            else
-                dns_string="dhcp-option=6"
-                for dns_entry in "${dns_array[@]}"; do
-                    dns_string+=",$dns_entry"
-                done
-                echo "$dns_string"$'\n' >> /dnsmasq.conf
-                logger "Add DNS: $dns_string" 0
-            fi
-
+            logger "Add DNS: $dns_string" 0
         fi
+    fi
+
+    # Static DHCP Hosts
+    logger "# Processing static DHCP hosts:" 1
+    
+    STATIC_DHCP_JSON=$(jq -c '.static_dhcp_hosts' /data/options.json)
+    
+    if [ -n "$STATIC_DHCP_JSON" ] && [ "$STATIC_DHCP_JSON" != "[]" ] && [ "$STATIC_DHCP_JSON" != "null" ]; then
+        # Parse JSON mit jq
+        ENTRY_COUNT=$(echo "$STATIC_DHCP_JSON" | jq 'length')
+        
+        for ((i=0; i<ENTRY_COUNT; i++)); do
+            MAC=$(echo "$STATIC_DHCP_JSON" | jq -r ".[$i].mac")
+            IP=$(echo "$STATIC_DHCP_JSON" | jq -r ".[$i].ip")
+            HOSTNAME=$(echo "$STATIC_DHCP_JSON" | jq -r ".[$i].hostname")
+            
+            if [ -n "$MAC" ] && [ -n "$IP" ] && [ -n "$HOSTNAME" ] && [ "$MAC" != "null" ] && [ "$IP" != "null" ] && [ "$HOSTNAME" != "null" ]; then
+                echo "dhcp-host=${MAC},${IP},${HOSTNAME}" >> /dnsmasq.conf
+                logger "Static DHCP: ${MAC} -> ${IP} (${HOSTNAME})" 0
+            else
+                logger "Warning: Invalid static DHCP entry at index ${i}" 0
+            fi
+        done
+    fi
 
     # Append override options to dnsmasq.conf
     if [ ${#DNSMASQ_CONFIG_OVERRIDE} -ge 1 ]; then

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.2] - 2026-05-10
+
+Pull-Request: [#3](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/3)
+
+### Added
+- **Static DHCP Hosts GUI**: New `static_dhcp_hosts` configuration option with dedicated fields for MAC address, IP address, and hostname. No longer requires manual `dnsmasq_config_override` entries for static DHCP leases.
+- **jq dependency**: Added `jq` to Dockerfile for reliable JSON parsing of configuration arrays.
+
+---
+
 ## [0.6.1] - 2026-05-08
 
 Pull-Request: [#2](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/2)

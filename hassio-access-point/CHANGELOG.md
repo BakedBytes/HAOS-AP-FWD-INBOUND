@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.7.0] - 2026-06-19
+## [0.7.1] - 2026-06-19
 
 Pull-Request: [#4](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/4)
 

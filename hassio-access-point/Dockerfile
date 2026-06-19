@@ -14,7 +14,8 @@ RUN apk update && \
         sudo \
         jq \
         dnsmasq \
-        iptables && \
+        iptables \
+        busybox-extras && \
     rm -rf /var/cache/apk/*
 
 RUN mkdir -p /www/cgi-bin /var/lib/misc

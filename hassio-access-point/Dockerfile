@@ -17,10 +17,14 @@ RUN apk update && \
         iptables && \
     rm -rf /var/cache/apk/*
 
+RUN mkdir -p /www/cgi-bin /var/lib/misc
+
 COPY hostapd.conf /
 COPY dnsmasq.conf /
+COPY index.html /www/
+COPY leases.cgi /www/cgi-bin/index.cgi
 
 COPY run.sh /
-RUN chmod a+x /run.sh
+RUN chmod a+x /run.sh /www/cgi-bin/index.cgi
 
 CMD [ "/run.sh" ]

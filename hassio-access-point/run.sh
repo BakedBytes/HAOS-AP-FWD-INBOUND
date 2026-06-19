@@ -14,8 +14,16 @@ logger(){
     msg=$1
     level=$2
     if [ $DEBUG -ge $level ]; then
-        echo $msg
+        printf '%s addon: %s\n' "$(date '+%b %e %H:%M:%S')" "$msg"
     fi
+}
+
+# Runs a command and prefixes every output line with a syslog-style timestamp and label.
+# Usage: run_logged "label" command [args...]
+run_logged() {
+    local label="$1"
+    shift
+    "$@" 2>&1 | awk -v lbl="$label" '{ printf "%s %s: %s\n", strftime("%b %e %H:%M:%S"), lbl, $0; fflush() }'
 }
 
 CONFIG_PATH=/data/options.json
@@ -57,7 +65,7 @@ DNSMASQ_CONFIG_OVERRIDE=$(bashio::config 'dnsmasq_config_override' )
 # Get the Default Route interface
 DEFAULT_ROUTE_INTERFACE=$(ip route show default | awk '/^default/ { print $5 }')
 
-echo "Starting HAOS Access Point Addon by BB"
+logger "Starting HAOS Access Point Addon by BB" 0
 
 # Setup interface
 logger "# Setup interface:" 1
@@ -297,16 +305,26 @@ else
     fi
 fi
 
+# Start web server for DHCP lease display (ingress UI)
+logger "## Starting web server for lease display" 1
+httpd -p 8099 -h /www &
+
 # Start dnsmasq if DHCP is enabled in config
 if $(bashio::config.true "dhcp"); then
     logger "## Starting dnsmasq daemon" 1
-    dnsmasq -C /dnsmasq.conf --log-facility=- --log-dhcp 2>&1 | grep -E "DHCPDISCOVER|DHCPOFFER|DHCPREQUEST|DHCPACK|DHCPNAK" &
+    dnsmasq -C /dnsmasq.conf --log-facility=- --log-dhcp 2>&1 | awk '
+        /DHCPDISCOVER|DHCPOFFER|DHCPREQUEST|DHCPACK|DHCPNAK/ {
+            sub(/^[A-Z][a-z]+ [ 0-9]+ [0-9:]+ [^:]+: /, "")
+            printf "%s dnsmasq: %s\n", strftime("%b %e %H:%M:%S"), $0
+            fflush()
+        }
+    ' &
 fi
 
 logger "## Starting hostapd daemon" 1
 # If debug level is greater than 1, start hostapd in debug mode
 if [ $DEBUG -gt 1 ]; then
-    hostapd -d /hostapd.conf & wait ${!}
+    run_logged "hostapd" hostapd -d /hostapd.conf & wait ${!}
 else
-    hostapd /hostapd.conf & wait ${!}
+    run_logged "hostapd" hostapd /hostapd.conf & wait ${!}
 fi

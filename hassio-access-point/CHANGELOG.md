@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.0] - 2026-06-19
+
+Pull-Request: [#4](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/4)
+
+### Added
+- **DHCP Lease UI**: New ingress web interface showing all active DHCP leases (IP, MAC, hostname, expiry) as an auto-refreshing table (no JavaScript required). Served via busybox httpd with a CGI shell script reading the dnsmasq lease file directly.
+- **Unified log timestamps**: All addon log output now shares the same syslog-style timestamp format (`Jun 19 12:34:56 label: message`). Added `run_logged()` helper function for uniformly timestamping any command's output — making it easy to extend to future daemons.
+
+---
+
 ## [0.6.2] - 2026-05-10
 
 Pull-Request: [#3](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/3)

@@ -307,7 +307,7 @@ fi
 
 # Start web server for DHCP lease display (ingress UI)
 logger "## Starting web server for lease display" 1
-busybox httpd -p 8099 -h /www &
+httpd -p 8099 -h /www &
 
 # Start dnsmasq if DHCP is enabled in config
 if $(bashio::config.true "dhcp"); then

@@ -42,6 +42,7 @@ cat <<'HTML'
     .unknown { color: #aaa; }
     .check-green { color: #2a7a2a; }
     .check-yellow { color: #b8860b; }
+    .check-red { color: #cc0000; }
   </style>
 </head>
 <body>
@@ -80,8 +81,10 @@ else
         fi
         if is_static "$mac" && has_lease "$mac"; then
             static_cell='<td class="check-green">&#10004;</td>'
-        elif ! has_lease "$mac"; then
+        elif is_static "$mac"; then
             static_cell='<td class="check-yellow">&#10004;</td>'
+        elif ! has_lease "$mac"; then
+            static_cell='<td class="check-red">&#63;</td>'
         else
             static_cell='<td></td>'
         fi

@@ -13,6 +13,13 @@ is_static() {
     echo "$STATIC_MACS" | grep -qx "$(echo "$1" | tr '[:upper:]' '[:lower:]')"
 }
 
+# Look up IP and hostname from dhcp-host entry for a given MAC
+static_info() {
+    local mac_lower
+    mac_lower=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+    grep -i "^dhcp-host=${mac_lower}\|^dhcp-host=${1}" "$DNSMASQ_CONF" 2>/dev/null | head -1 | cut -d= -f2 | awk -F, '{print $2 " " $3}'
+}
+
 has_lease() {
     [ -f "$LEASE_FILE" ] && grep -qi " $1 " "$LEASE_FILE"
 }
@@ -61,6 +68,12 @@ else
             if [ -n "$lease" ]; then
                 ip=$(echo "$lease" | awk '{print $3}')
                 hostname=$(echo "$lease" | awk '{print $4}')
+                ip_class=""
+                host_class=""
+            elif is_static "$mac"; then
+                info=$(static_info "$mac")
+                ip=$(echo "$info" | awk '{print $1}')
+                hostname=$(echo "$info" | awk '{print $2}')
                 ip_class=""
                 host_class=""
             fi

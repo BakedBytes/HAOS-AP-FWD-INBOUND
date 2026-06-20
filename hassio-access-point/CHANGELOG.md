@@ -2,8 +2,6 @@
 
 ## [0.7.3] - 2026-06-19
 
-Pull-Requests: [#4](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/4), [#5](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/5), [#6](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/6)
-
 ### Added
 - **DHCP Lease UI**: New ingress web interface showing all active DHCP leases (IP, MAC, hostname, expiry) as an auto-refreshing table (no JavaScript required). Served via busybox httpd with a CGI shell script reading the dnsmasq lease file directly.
 - **Connected Clients**: Ingress UI shows a "Connected Clients" section above the lease table. Uses `hostapd_cli list_sta` to list currently associated WiFi clients. If a client's MAC matches a DHCP lease, IP and hostname are shown; otherwise displayed as unknown.
@@ -14,8 +12,6 @@ Pull-Requests: [#4](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/4), [
 
 ## [0.6.2] - 2026-05-10
 
-Pull-Request: [#3](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/3)
-
 ### Added
 - **Static DHCP Hosts GUI**: New `static_dhcp_hosts` configuration option with dedicated fields for MAC address, IP address, and hostname. No longer requires manual `dnsmasq_config_override` entries for static DHCP leases.
 - **jq dependency**: Added `jq` to Dockerfile for reliable JSON parsing of configuration arrays.
@@ -24,15 +20,11 @@ Pull-Request: [#3](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/3)
 
 ## [0.6.1] - 2026-05-08
 
-Pull-Request: [#2](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/2)
-
 ### Added 
 - **Inbound Access Toggle**: Added new `client_inbound_access` config option to allow devices from the main network to initiate connections into the AP subnet, independently of `client_internet_access`.
 - **DHCP Logging**: dnsmasq now logs DHCP lease events (DISCOVER, OFFER, REQUEST, ACK, NAK) to the addon log.
 
 ## [0.6.0] - 2026-05-04
-
-Pull-Request: [#1](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/1)
 
 ### Changed
 - **Migration to Docker BuildKit**: Updated build process to use native `docker build` and removed deprecated `build.yaml`. The `Dockerfile` is now the single source of truth (replacing per-arch base image definitions with `FROM ghcr.io/home-assistant/base:3.23`).

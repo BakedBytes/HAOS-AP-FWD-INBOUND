@@ -3,7 +3,19 @@ echo "Content-Type: text/html"
 echo ""
 
 LEASE_FILE="/var/lib/misc/dnsmasq.leases"
+DNSMASQ_CONF="/dnsmasq.conf"
 INTERFACE=$(jq -r '.interface // "wlan0"' /data/options.json 2>/dev/null || echo "wlan0")
+
+# Extract static MACs from dnsmasq.conf (dhcp-host=MAC,IP,HOSTNAME lines)
+STATIC_MACS=$(grep -i '^dhcp-host=' "$DNSMASQ_CONF" 2>/dev/null | cut -d= -f2 | cut -d, -f1 | tr '[:upper:]' '[:lower:]')
+
+is_static() {
+    echo "$STATIC_MACS" | grep -qx "$(echo "$1" | tr '[:upper:]' '[:lower:]')"
+}
+
+has_lease() {
+    [ -f "$LEASE_FILE" ] && grep -qi " $1 " "$LEASE_FILE"
+}
 
 cat <<'HTML'
 <!DOCTYPE html>
@@ -21,6 +33,8 @@ cat <<'HTML'
     th { background: #f0f0f0; }
     tr:nth-child(even) { background: #fafafa; }
     .unknown { color: #aaa; }
+    .check-green { color: #2a7a2a; }
+    .check-yellow { color: #b8860b; }
   </style>
 </head>
 <body>
@@ -35,7 +49,7 @@ if [ -z "$CONNECTED" ]; then
     echo "<p>No clients connected.</p>"
 else
     echo "<table>"
-    echo "<tr><th>MAC Address</th><th>IP Address</th><th>Hostname</th></tr>"
+    echo "<tr><th>MAC Address</th><th>IP Address</th><th>Hostname</th><th>Static</th></tr>"
     echo "$CONNECTED" | while IFS= read -r mac; do
         [ -z "$mac" ] && continue
         ip="-"
@@ -51,8 +65,15 @@ else
                 host_class=""
             fi
         fi
-        printf '<tr><td>%s</td><td class="%s">%s</td><td class="%s">%s</td></tr>\n' \
-            "$mac" "$ip_class" "$ip" "$host_class" "$hostname"
+        if is_static "$mac" && has_lease "$mac"; then
+            static_cell='<td class="check-green">&#10004;</td>'
+        elif ! has_lease "$mac"; then
+            static_cell='<td class="check-yellow">&#10004;</td>'
+        else
+            static_cell='<td></td>'
+        fi
+        printf '<tr><td>%s</td><td class="%s">%s</td><td class="%s">%s</td>%s</tr>\n' \
+            "$mac" "$ip_class" "$ip" "$host_class" "$hostname" "$static_cell"
     done
     echo "</table>"
 fi
@@ -64,15 +85,20 @@ if [ ! -f "$LEASE_FILE" ] || [ ! -s "$LEASE_FILE" ]; then
     echo "<p>No active leases found.</p>"
 else
     echo "<table>"
-    echo "<tr><th>IP Address</th><th>MAC Address</th><th>Hostname</th><th>Expires</th></tr>"
+    echo "<tr><th>IP Address</th><th>MAC Address</th><th>Hostname</th><th>Expires</th><th>Static</th></tr>"
     while IFS=' ' read -r expiry mac ip hostname _; do
         if [ "$expiry" = "0" ]; then
             exp_str="static"
         else
             exp_str=$(awk -v ts="$expiry" 'BEGIN { print strftime("%Y-%m-%d %H:%M:%S", ts+0) }')
         fi
-        printf '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>\n' \
-            "$ip" "$mac" "$hostname" "$exp_str"
+        if is_static "$mac"; then
+            static_cell='<td class="check-green">&#10004;</td>'
+        else
+            static_cell='<td></td>'
+        fi
+        printf '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td>%s</tr>\n' \
+            "$ip" "$mac" "$hostname" "$exp_str" "$static_cell"
     done < "$LEASE_FILE"
     echo "</table>"
 fi

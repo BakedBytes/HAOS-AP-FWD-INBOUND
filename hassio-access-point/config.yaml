@@ -1,6 +1,6 @@
 ---
 name: HAOS Access Point BB
-version: 0.7.2
+version: 0.7.3
 slug: haos-access-point-bb
 description: Create a WiFi access point to directly connect devices to Home Assistant
 arch: [armhf, armv7, aarch64, amd64, i386]

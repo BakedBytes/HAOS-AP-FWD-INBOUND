@@ -1,12 +1,13 @@
 # Changelog
 
-## [0.7.2] - 2026-06-19
+## [0.7.3] - 2026-06-19
 
-Pull-Requests: [#4](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/4), [#5](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/5)
+Pull-Requests: [#4](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/4), [#5](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/5), [#6](https://github.com/BakedBytes/HAOS-AP-FWD-INBOUND/pull/6)
 
 ### Added
 - **DHCP Lease UI**: New ingress web interface showing all active DHCP leases (IP, MAC, hostname, expiry) as an auto-refreshing table (no JavaScript required). Served via busybox httpd with a CGI shell script reading the dnsmasq lease file directly.
 - **Connected Clients**: Ingress UI shows a "Connected Clients" section above the lease table. Uses `hostapd_cli list_sta` to list currently associated WiFi clients. If a client's MAC matches a DHCP lease, IP and hostname are shown; otherwise displayed as unknown.
+- **Static IP indicator**: Both tables now show a Static column. Green checkmark if the client has a `dhcp-host=` entry in dnsmasq and an active lease (proper static DHCP). Yellow checkmark if the client is connected but has no lease (self-assigned static IP, unknown to dnsmasq). Empty for regular dynamic DHCP clients.
 - **Unified log timestamps**: All addon log output now shares the same syslog-style timestamp format (`Jun 19 12:34:56 label: message`). Added `run_logged()` helper function for uniformly timestamping any command's output — making it easy to extend to future daemons.
 
 ---
